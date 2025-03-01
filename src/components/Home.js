@@ -31,7 +31,7 @@ function Home({ setIsAuthenticated }) {
           return;
         }
         const recipeData = await recipeResponse.json();
-        console.log('Fetched recipes:', recipeData.recipes); // Debug log
+        console.log('Fetched recipes:', recipeData.recipes);
         setRecipes(recipeData.recipes || []);
         setFilteredRecipes(recipeData.recipes || []);
       } catch (err) {
@@ -137,7 +137,7 @@ function Home({ setIsAuthenticated }) {
     }
 
     try {
-      const response = await fetch('http://localhost:8000/api/Buono/recipes', {
+      const response = await fetch('http://localhost:8000/api/Buono/user-recipes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -145,15 +145,18 @@ function Home({ setIsAuthenticated }) {
         },
         body: JSON.stringify(newRecipe)
       });
-      const result = await response.json();
-      if (response.ok) {
-        setRecipes([...recipes, result.recipe]);
-        setFilteredRecipes([...recipes, result.recipe]);
-        setNewRecipe({ Name: '', Ingredients: '', "Desc (Preparation)": '', Region: '' });
-        setShowAddRecipe(false);
-      } else {
-        setError(result.message || 'Failed to add recipe');
+      if (!response.ok) {
+        const text = await response.text();
+        console.error('Failed to add recipe:', response.status, text);
+        setError(`Failed to add recipe: ${response.status} - ${text}`);
+        return;
       }
+      const result = await response.json();
+      console.log('Recipe added successfully:', result);
+      setRecipes([...recipes, result.recipe]);
+      setFilteredRecipes([...recipes, result.recipe]);
+      setNewRecipe({ Name: '', Ingredients: '', "Desc (Preparation)": '', Region: '' });
+      setShowAddRecipe(false);
     } catch (err) {
       setError('Error adding recipe');
       console.error(err);
